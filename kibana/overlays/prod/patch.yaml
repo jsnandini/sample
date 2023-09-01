@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: kibana
+  name: kibana
+  labels:
+    app: kibana
+spec:
+  template:
+    spec:
+      containers:
+      - name: kibana
+        env:
+        - name: ELASTICSEARCH_URL
+          value: "http://dorado-elasticsearch-instance-1.c.idfy-data-lake-prod.internal:9200"
+        - name: ELASTICSEARCH_USER
+          valueFrom:
+            secretKeyRef:
+              name: es-auth-secret
+              key: elasticsearch-username #default username is "elastic"
+        - name: ELASTICSEARCH_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: es-auth-secret
+              key: elasticsearch-password
+        volumeMounts:
+        - name: config
+          mountPath: /usr/share/kibana/config/kibana.yml
+          readOnly: true
+          subPath: kibana.yml
+      volumes:
+      - name: config
+        configMap:
+          name: kibana-config

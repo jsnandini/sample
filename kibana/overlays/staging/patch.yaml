@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: kibana
+  name: kibana
+  labels:
+    app: kibana
+spec:
+  template:
+    spec:
+      containers:
+      - name: kibana
+        env:
+          - name: ELASTICSEARCH_HOSTS
+            value: '["http://libra-es-cluster-1.c.idfy-shared-staging.internal:9200","http://libra-es-cluster-2.c.idfy-shared-staging.internal:9200"]'
+          # - name: ELASTICSEARCH_NODE1_URL
+          #   value: http://libra-elasticsearch-cluster-1.c.idfy-shared-staging.internal:9200
+          # - name: ELASTICSEARCH_NODE2_URL
+          #   value: http://libra-elasticsearch-cluster-2.c.idfy-shared-staging.internal:9200
+          # - name: ELASTICSEARCH_NODE3_URL
+          #   value: http://libra-elasticsearch-cluster-3.c.idfy-shared-staging.internal:9200
+          # - name: ELASTICSEARCH_NODE4_URL
+          #   value: http://libra-elasticsearch-cluster-4.c.idfy-shared-staging.internal:9200
+          # - name: ELASTICSEARCH_NODE5_URL
+          #   value: http://libra-elasticsearch-cluster-5.c.idfy-shared-staging.internal:9200
+          - name: ELASTICSEARCH_USER
+            valueFrom:
+              secretKeyRef:
+                name: es-auth-secret
+                key: es-cluster-username #default username is "kibana_system"
+          - name: ELASTICSEARCH_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: es-auth-secret
+                key: es-cluster-password
+          # - name: ELASTICSEARCH_TOKEN
+          #   valueFrom:
+          #     secretKeyRef:
+          #       name: es-auth-secret
+          #       key: es-cluster-service-account-token
+        volumeMounts:
+        - name: config
+          mountPath: /usr/share/kibana/config/kibana.yml
+          readOnly: true
+          subPath: kibana.yml
+      volumes:
+      - name: config
+        configMap:
+          name: kibana-config
